@@ -40,18 +40,13 @@ export default function FeedbackGeben() {
   }, []);
 
   const port = useMemo(() => (cfg && page ? createPublicPort(cfg, page) : null), [cfg, page]);
-  const events = useLiveList(port, 'veranstaltungen', { intervalMs: 15000 });
-  const interaktionen = useLiveList(port, 'interaktionen', { intervalMs: 15000 });
+  const events = useLiveList(port, 'veranstaltungen', { intervalMs: 3000 });
+  const interaktionen = useLiveList(port, 'interaktionen', { intervalMs: 3000 });
 
   const veranstaltung = events.records.find(r => r.id === veranstaltungId) ?? null;
   const activeId = veranstaltung ? fieldRef(veranstaltung, 'aktive_interaktion') : null;
-  // The question the visitor was shown: pinned at load, moved only by the fresh check on submit.
-  const [shownId, setShownId] = useState<string | null>(null);
   const [changed, setChanged] = useState(false);
-  useEffect(() => {
-    if (!shownId && activeId) setShownId(activeId);
-  }, [shownId, activeId]);
-  const aktiv = shownId ? interaktionen.records.find(r => r.id === shownId) ?? null : null;
+  const aktiv = activeId ? interaktionen.records.find(r => r.id === activeId) ?? null : null;
 
   const form = useStepForm('feedbacks', {
     fields: ['feedback_text'],
@@ -65,7 +60,7 @@ export default function FeedbackGeben() {
       entity: 'feedbacks',
       form,
       primary: true,
-      values: { interaktion: shownId ?? '', kuerzel: kuerzel, absende_kennung: kennung },
+      values: { interaktion: activeId ?? '', kuerzel: kuerzel, absende_kennung: kennung },
     }],
     { draftKey: `feedback-${veranstaltungId ?? 'none'}` },
   );
@@ -110,7 +105,6 @@ export default function FeedbackGeben() {
     submit.reset();
     form.reset();
     setKennung(newKennung());
-    setShownId(null);
     setChanged(false);
   };
 
@@ -118,9 +112,8 @@ export default function FeedbackGeben() {
     prepareChallenge(cfg, page, 'POST', `/apps/${page.endpoints?.find(e => e.op === 'create')?.app_id ?? ''}/records`);
     if (!form.validate()) return;
     const fresh = await freshRef(port, 'veranstaltungen', veranstaltungId, 'aktive_interaktion');
-    if (fresh !== shownId) {
-      await interaktionen.reload();
-      setShownId(fresh);
+    if (fresh !== activeId) {
+      await Promise.all([events.reload(), interaktionen.reload()]);
       setChanged(true);
       return;
     }

@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "pages": [
+    {
+      "slug": "feedback-geben",
+      "type": "custom",
+      "entity": "feedbacks",
+      "title": "Feedback geben",
+      "published": true,
+      "fields": [
+        "interaktion",
+        "kuerzel",
+        "feedback_text",
+        "absende_kennung"
+      ],
+      "policy": null
+    },
+    {
+      "slug": "kontakt-hinterlegen",
+      "type": "custom",
+      "entity": "teilnehmerkontakte",
+      "title": "E-Mail-Adresse hinterlegen",
+      "published": true,
+      "fields": [
+        "veranstaltung",
+        "kuerzel",
+        "email",
+        "einwilligung"
+      ],
+      "policy": null
+    }
+  ]
+}
