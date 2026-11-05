@@ -44,7 +44,7 @@ export default function FeedbacksZusammenfuehrenPage() {
   const live = useLiveList(flow.port, 'feedbacks', {
     intervalMs: 0,
     enabled: Boolean(pickedId),
-    list: pickedId ? { filter: refFilter('interaktion', pickedId), orderby: ['r.createdAt asc'] } : undefined,
+    list: pickedId ? { filter: refFilter('interaktion', pickedId), orderby: ['r.createdat asc'] } : undefined,
   });
   const record = pickedId ? flow.picks.interaktionen.recordOf(pickedId) : undefined;
   recordRef.current = record;

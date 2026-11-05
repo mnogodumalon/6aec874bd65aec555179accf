@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "flows": [
+    {
+      "path": "/intents/interaktion-aktivieren",
+      "label": "Interaktion aktivieren",
+      "description": "Aktive Interaktion einer Veranstaltung mit einem Klick setzen",
+      "file": "src/pages/intents/InteraktionAktivierenPage.tsx",
+      "summary": "/**\n * Interaktion aktivieren — 3-Schritt-Wizard.\n * Steps: 1) Veranstaltung wählen → 2) Eine Interaktion dieser Veranstaltung wählen → 3) Prüfen & als aktive Interaktion setzen.\n * Reads: veranstaltungen, interaktionen. Writes: veranstaltungen.aktive_interaktion (update, via useInteraktionAktivierenFlow).\n * Composes: IntentWizardShell, EntitySelectStep, StepNav, SummaryStep, SuccessStep.\n */",
+      "components": [
+        "EntitySelectStep",
+        "IntentWizardShell",
+        "StepNav",
+        "SuccessStep",
+        "SummaryStep",
+        "WizardStep"
+      ],
+      "writes": []
+    },
+    {
+      "path": "/intents/feedbacks-zusammenfuehren",
+      "label": "Feedbacks zusammenführen",
+      "description": "Alle Feedbacks der aktiven Interaktion in ein Textfeld zusammenführen",
+      "file": "src/pages/intents/FeedbacksZusammenfuehrenPage.tsx",
+      "summary": "/**\n * Feedbacks zusammenführen — 2-Schritt-Wizard.\n * Steps: 1) Interaktion wählen → 2) Zusammengeführten Text prüfen & speichern.\n * Reads: interaktionen, feedbacks. Writes: interaktionen.zusammengefuehrter_text (update).\n * Composes: IntentWizardShell, EntitySelectStep, StepNav, SummaryStep, SuccessStep.\n */",
+      "components": [
+        "EntitySelectStep",
+        "IntentWizardShell",
+        "SuccessStep",
+        "SummaryStep",
+        "WizardStep"
+      ],
+      "writes": []
+    }
+  ],
+  "unregistered_pages": []
+}
