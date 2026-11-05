@@ -36,6 +36,7 @@ import {
   todayIso, nowIso, isEmptyValue, policyFixedValue, withPickPolicy, usePolicyVersion, refFilter, combineFilters,  type StepForm, type JourneyRecord, type RefContext, type SelectItemLike, type FormValues, type PlanStep,} from '@/lib/journey';
 import { servicePort } from '@/services/journeyPort';
 import { requestWizardStep } from '@/lib/journey/useStepForm';
+import { reportReadFailure } from '@/lib/journey/readFailures';
 import { pickHint, whereSentence, type PickWhere } from '@/lib/journey/policy';
 import { labelOf, optionsOf, type EntityKey } from '@/lib/journey/rules';
 import { entityLabel } from '@/lib/journey/rules';
@@ -243,13 +244,14 @@ export function useInteraktionAktivierenFlow(options: InteraktionAktivierenFlowO
     let on = true;
     void servicePort.get('veranstaltungen', linkedId).then(rec => {
       if (!on || !rec) return;
+      reportReadFailure('interaktion-aktivieren:linked', null);
       picks.veranstaltungen.adopt(rec);
       targets.veranstaltungen.onSelect(rec.id);
       // the link named the record — start after the steps that pick it, without the start screen
       const after = Math.max(...Object.keys(targets).map(k => steps[k] ?? 1)) + 1;
       if (new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('record') === linkedId) requestWizardStep(after);
-    }).catch(() => undefined);
-    return () => { on = false; };
+    }).catch(() => { if (on) reportReadFailure('interaktion-aktivieren:linked', 'veranstaltungen'); });
+    return () => { on = false; reportReadFailure('interaktion-aktivieren:linked', null); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per link
   }, [linkedId]);
   /** Props for a single-record pick step: {...flow.picks.x.select} {...flow.pick('x')} */

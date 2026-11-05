@@ -19,12 +19,13 @@
  * and EntitySelectStep searches it client-side. The step's FORM adapts either
  * way — that is resolveSelectMode's job, not this hook's.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { JourneyPort, JourneyRecord } from './port';
 import { FIELD_RULES, displayNameOf, type EntityKey, type StringFieldKey } from './rules';
 import { SERVER_SEARCH_FROM, SEARCH_PAGE_SIZE } from './selectMode';
 import { recordIdOf, rememberRecordLabel } from './recordLabels';
 import { takenIdsFrom, takenRuleOf } from './occupancy';
+import { reportReadFailure } from './readFailures';
 import { t } from '@/i18n';
 import { Sentry } from '@/lib/sentry';
 
@@ -345,6 +346,11 @@ export function useRecordSearch<E extends EntityKey, T extends SelectItemLike>(
   }, [remember]);
 
   const filtered = Boolean(filter) || typeof where === 'function';
+  // a pick that could not load is no empty list (EF-18: a 502 on the picks, the merge step read
+  // „keine Feedbacks“ and „Bestätigen“ stayed enabled)
+  const searchId = useId();
+  useEffect(() => { reportReadFailure(searchId, error ? String(entity) : null); }, [searchId, error, entity]);
+  useEffect(() => () => reportReadFailure(searchId, null), [searchId]);
   const loaded = useMemo(
     () => items.map(i => records.current.get(i.id)).filter((r): r is JourneyRecord => r !== undefined),
     [items],

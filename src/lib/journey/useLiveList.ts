@@ -11,30 +11,17 @@
  *
  *   const live = useLiveList(port, 'beitraege', { intervalMs: 10000, list: { filter: "r.v_freigabe == 'ja'" } });
  */
-import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { reportReadFailure } from './readFailures';
 import type { EntityKey } from './rules';
 import type { JourneyPort, JourneyRecord, ListOptions } from './port';
 
-// Lists of this page that never loaded and failed (EF-13, A11: an invalid orderby answered 400,
-// the merge step showed „Feedbacks 0“ and „Bestätigen“ would have written the empty frame).
-// SummaryStep reads it and refuses to confirm while one is failing — a 0 is not a value.
-const failing = new Map<string, string>();
-const failingListeners = new Set<() => void>();
-let failingSnapshot: string[] = [];
-function setFailing(id: string, entity: string | null): void {
-  if ((failing.get(id) ?? null) === entity) return;
-  if (entity) failing.set(id, entity); else failing.delete(id);
-  failingSnapshot = [...failing.values()];
-  for (const l of failingListeners) l();
-}
-/** The entities whose live list on this page failed before it ever loaded. */
-export function useFailingLists(): string[] {
-  return useSyncExternalStore(
-    (l) => { failingListeners.add(l); return () => { failingListeners.delete(l); }; },
-    () => failingSnapshot,
-    () => failingSnapshot,
-  );
-}
+export { useFailingLists } from './readFailures';
+
+/** The slowest poll a PUBLIC page may run (EF-20, Bau 14: two lists at 3 s on one open form
+ *  sent 66 requests a minute, every read with its own proof-of-work challenge; 9 got 429 and a
+ *  send in such a phase failed). Correctness at send time is freshRef's job, not the poll's. */
+export const PUBLIC_MIN_INTERVAL_MS = 20_000;
 
 export interface LiveListOptions {
   /** Poll every … ms (default 15 000; 0 = first load + events only). */
@@ -71,6 +58,8 @@ export function useLiveList(port: JourneyPort | null | undefined, entity: Entity
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [failures, setFailures] = useState(0);
+  const pauseUntil = useRef(0);
+  const backoffN = useRef(0);
   const alive = useRef(true);
   const seq = useRef(0);
 
@@ -80,9 +69,14 @@ export function useLiveList(port: JourneyPort | null | undefined, entity: Entity
     try {
       const rows = await port.list(entity, JSON.parse(listKey) as ListOptions);
       if (!alive.current || my !== seq.current) return;   // a newer fetch answered already
-      setRecords(rows); setError(null); setStale(false); setLastSync(new Date()); setLoaded(true); setFailures(0);
+      setRecords(rows); setError(null); setStale(false); setLastSync(new Date()); setLoaded(true); setFailures(0); backoffN.current = 0; pauseUntil.current = 0;
     } catch (err) {
       if (!alive.current || my !== seq.current) return;
+      // a failing public read backs off (20 s, 40 s, 80 s, at most 2 min) — the rows stay on screen
+      if (port?.door === 'public') {
+        backoffN.current += 1;
+        pauseUntil.current = Date.now() + Math.min(PUBLIC_MIN_INTERVAL_MS * 2 ** (backoffN.current - 1), 120_000);
+      }
       setError(err instanceof Error ? err : new Error(String(err)));
       setStale(true);
       setFailures(n => n + 1);
@@ -100,8 +94,13 @@ export function useLiveList(port: JourneyPort | null | undefined, entity: Entity
 
   useEffect(() => {
     if (!enabled) return;
-    const tick = () => { if (!(pauseHidden && typeof document !== 'undefined' && document.hidden)) void fetchOnce(); };
-    const timer = intervalMs > 0 ? window.setInterval(tick, intervalMs) : null;
+    const every = intervalMs > 0 && port?.door === 'public' ? Math.max(intervalMs, PUBLIC_MIN_INTERVAL_MS) : intervalMs;
+    const tick = () => {
+      if (pauseHidden && typeof document !== 'undefined' && document.hidden) return;
+      if (Date.now() < pauseUntil.current) return;
+      void fetchOnce();
+    };
+    const timer = every > 0 ? window.setInterval(tick, every) : null;
     const onVisible = () => { if (!document.hidden) void fetchOnce(); };
     const onChanged = () => { void fetchOnce(); };
     if (pauseHidden) document.addEventListener('visibilitychange', onVisible);
@@ -111,22 +110,22 @@ export function useLiveList(port: JourneyPort | null | undefined, entity: Entity
       if (pauseHidden) document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('assistant:data-changed', onChanged);
     };
-  }, [fetchOnce, intervalMs, pauseHidden, enabled]);
+  }, [fetchOnce, intervalMs, pauseHidden, enabled, port]);
 
   // until the FIRST load succeeds, try again by itself — 2 s, 5 s, 10 s, then every 15 s —
   // even when the list never polls (intervalMs 0): a 429/503 or a dropped connection on
   // opening the page must not leave it empty for good
   useEffect(() => {
     if (!enabled || loaded || failures === 0) return;
-    const wait = [2000, 5000, 10_000][failures - 1] ?? 15_000;
+    const wait = Math.max([2000, 5000, 10_000][failures - 1] ?? 15_000, pauseUntil.current - Date.now());
     const t = window.setTimeout(() => { void fetchOnce(); }, wait);
     return () => window.clearTimeout(t);
   }, [failures, loaded, enabled, fetchOnce]);
 
   const listId = useId();
   useEffect(() => {
-    setFailing(listId, error && !loaded ? String(entity) : null);
+    reportReadFailure(listId, error && !loaded ? String(entity) : null);
   }, [listId, error, loaded, entity]);
-  useEffect(() => () => setFailing(listId, null), [listId]);
+  useEffect(() => () => reportReadFailure(listId, null), [listId]);
   return { records, loading, error, loaded, stale, lastSync, reload: fetchOnce };
 }

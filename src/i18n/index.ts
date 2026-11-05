@@ -1772,11 +1772,11 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
         "lookups": {}
       },
       "feedbacks": {
-        "name": "Feedback",
+        "name": "Feedbacks",
         "app_id": "6aec87362b6e4e054710c681",
         "fields": {
           "interaktion": "Interaction",
-          "kuerzel": "Your Code",
+          "kuerzel": "Your Alias",
           "feedback_text": "Your Feedback",
           "absende_kennung": "Unique Submission ID"
         },
@@ -1787,9 +1787,9 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
         "app_id": "6aec87374113d2547ffb388c",
         "fields": {
           "veranstaltung": "Event",
-          "kuerzel": "Your Code",
+          "kuerzel": "Your Alias",
           "email": "Email Address",
-          "einwilligung": "I consent to my email address being stored and linked to my code."
+          "einwilligung": "I consent to my email address being stored and linked to my alias."
         },
         "lookups": {}
       }

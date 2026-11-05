@@ -681,13 +681,24 @@ export async function createPublicRecord(
     if (!res.ok) await throwSubmitError(res);
     return (await res.json()) as PublicRecordResult;
   }
+  // EF-20: a 429 (on the challenge or the POST) is waited out — 3 s, 8 s, 15 s — before the
+  // visitor sees an error; the page keeps „Wird gesendet …“ meanwhile
+  let limited = 0;
   for (let attempt = 0; ; attempt++) {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     };
     if (page.challenge !== 'none') {
-      headers['X-Captcha-Token'] = await takeToken(cfg, page, 'POST', path);
+      try {
+        headers['X-Captcha-Token'] = await takeToken(cfg, page, 'POST', path);
+      } catch (err) {
+        if (err instanceof RateLimitedError && limited < 3) {
+          await new Promise(r => setTimeout(r, [3000, 8000, 15_000][limited++]));
+          continue;
+        }
+        throw err;
+      }
     }
     let res: Response;
     try {
@@ -701,6 +712,12 @@ export async function createPublicRecord(
     }
     if (res.ok) return (await res.json()) as PublicRecordResult;
     if (res.status === 403 && attempt === 0 && page.challenge !== 'none') continue;
+    if (res.status === 429 && limited < 3) {
+      const after = Number(res.headers.get('Retry-After'));
+      await new Promise(r => setTimeout(r, Number.isFinite(after) && after > 0 ? Math.min(after * 1000, 20_000) : [3000, 8000, 15_000][limited]));
+      limited++;
+      continue;
+    }
     await throwSubmitError(res);
   }
 }

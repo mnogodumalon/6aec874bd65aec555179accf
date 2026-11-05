@@ -118,6 +118,17 @@ function checkVisitorKey(slug, src, file, sink) {
     sink.push(`${file}:${line}: page '${slug}' reads or writes localStorage itself — the visitor's code lives in useVisitorKey(), drafts in the journey layer; an own key gives the same visitor a second code`);
   }
 }
+// EF-20 (Bau 14): two lists at intervalMs 3000 on one open form sent 66 requests a minute
+// (each read solves a challenge) and drew 429s; the layer clamps to PUBLIC_MIN_INTERVAL_MS (20 s)
+function checkPollRate(slug, src, file, sink) {
+  for (const m of src.matchAll(/\bintervalMs\s*:\s*([\d_]+)/g)) {
+    const ms = Number(m[1].replace(/_/g, ''));
+    if (ms > 0 && ms < 20000) {
+      const line = src.slice(0, m.index).split('\n').length;
+      sink.push(`${file}:${line}: page '${slug}' polls every ${ms} ms — a public read costs a challenge each time and draws 429 (rate limit) for every visitor behind the same network; poll at most every 20 000 ms (the layer clamps to it), freshRef checks at send`);
+    }
+  }
+}
 // EF-14: a reference the page sets from its linked record's pointer is read fresh at send time
 function checkFreshPointer(slug, src, file, sink) {
   const sets = planPageSets.get(slug) || [];
@@ -776,6 +787,7 @@ if (pageOnly) {
     checkSiblingLinks(slug, stagedSrc, fileArg, errors);
     checkVisitorKey(slug, stagedSrc, fileArg, errors);
     checkFreshPointer(slug, stagedSrc, fileArg, errors);
+    checkPollRate(slug, stagedSrc, fileArg, errors);
   }
   // the lane sees its warnings too — before, file mode printed errors only (Abnahme 8)
   for (const w of warnings) console.log(`WARN: ${w}`);
@@ -882,6 +894,7 @@ for (const [slug, page] of surfacePages) {
   if (src) checkSiblingLinks(slug, src, `${PAGES_DIR}/${page.component}.tsx`, warnings);
   if (src) checkVisitorKey(slug, src, `${PAGES_DIR}/${page.component}.tsx`, warnings);
   if (src) checkFreshPointer(slug, src, `${PAGES_DIR}/${page.component}.tsx`, warnings);
+  if (src) checkPollRate(slug, src, `${PAGES_DIR}/${page.component}.tsx`, warnings);
   // PV-3: the plan ordered a link parameter — the surface must declare it, same entity
   const planned = planLinkParam.get(slug);
   if (planned && (!page.link_param || page.link_param.entity !== planned.entity)) {
