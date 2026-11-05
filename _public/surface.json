@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "pages": [
+    {
+      "slug": "feedback-geben",
+      "component": "FeedbackGeben",
+      "title": "Feedback geben",
+      "link_param": {
+        "name": "veranstaltung",
+        "entity": "veranstaltungen",
+        "label_field": "titel"
+      },
+      "endpoints": [
+        {
+          "entity": "veranstaltungen",
+          "op": "list",
+          "fields": [
+            "titel",
+            "aktive_interaktion"
+          ],
+          "max_records": 100
+        },
+        {
+          "entity": "interaktionen",
+          "op": "list",
+          "fields": [
+            "titel",
+            "frage",
+            "veranstaltung"
+          ],
+          "max_records": 500
+        },
+        {
+          "entity": "feedbacks",
+          "op": "create",
+          "fields": [
+            "interaktion",
+            "feedback_text",
+            "kuerzel",
+            "absende_kennung"
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "kontakt-hinterlegen",
+      "component": "KontaktHinterlegen",
+      "title": "E-Mail-Adresse hinterlegen",
+      "link_param": {
+        "name": "veranstaltung",
+        "entity": "veranstaltungen",
+        "label_field": "titel"
+      },
+      "endpoints": [
+        {
+          "entity": "veranstaltungen",
+          "op": "list",
+          "fields": [
+            "titel"
+          ],
+          "max_records": 500
+        },
+        {
+          "entity": "teilnehmerkontakte",
+          "op": "create",
+          "fields": [
+            "veranstaltung",
+            "kuerzel",
+            "email",
+            "einwilligung"
+          ]
+        }
+      ]
+    }
+  ]
+}
