@@ -43,8 +43,8 @@ export interface IntentLink {
 
 export const INTENTS: IntentLink[] = [
   // <custom:intents>
-  { path: '/intents/interaktion-aktivieren', label: { de: 'Interaktion aktivieren', en: 'Activate interaction' }, icon: IconPlayerPlay, description: 'Aktive Interaktion einer Veranstaltung mit einem Klick setzen' },
-  { path: '/intents/feedbacks-zusammenfuehren', label: { de: 'Feedbacks zusammenführen', en: 'Merge feedback' }, icon: IconGitMerge, description: 'Alle Feedbacks der aktiven Interaktion in ein Textfeld zusammenführen' },
+  { path: '/intents/interaktion-aktivieren', label: { de: 'Interaktion aktivieren', en: 'Activate interaction' }, icon: IconPlayerPlay, description: { de: 'Aktive Interaktion einer Veranstaltung mit einem Klick setzen', en: 'Set an event\'s active interaction with one click' } },
+  { path: '/intents/feedbacks-zusammenfuehren', label: { de: 'Feedbacks zusammenführen', en: 'Merge feedback' }, icon: IconGitMerge, description: { de: 'Alle Feedbacks der aktiven Interaktion in ein Textfeld zusammenführen', en: 'Combine all feedback from the active interaction into one text field' } },
   // </custom:intents>
 ];
 
@@ -64,5 +64,5 @@ export const INTENTS_PENDING = false;
  * pulsing "werden erstellt …" in every deployed Phase-1 bundle forever — no
  * code path redeploys Phase 1 without the flag (live 03.09.2026).
  */
-export const INTENTS_PENDING_SINCE: string | null = '2026-11-05T13:41:49+00:00';
+export const INTENTS_PENDING_SINCE: string | null = null;
 export const PENDING_MAX_MINUTES = 30;

@@ -364,6 +364,7 @@ export const UI_CATALOG: Record<CoreLocale, Record<string, string>> = {
     "vte_failed": "Nicht gespeichert — erneut versuchen",
     "vte_copy": "Text kopieren",
     "vte_copied": "Kopiert",
+    "ss_read_failed": "Die Daten für „{what}“ konnten nicht geladen werden — Bestätigen ist gesperrt, damit nichts mit einer leeren Liste gespeichert wird. Bitte die Seite neu laden.",
     "sp_taken": "Übernommen",
     "ppa_qr_title": "QR-Code",
     "ppa_qr_intro": "Scannen öffnet den Link — zum Ausdrucken, für den Beamer oder den Flyer. Der Link steht darunter, falls jemand nicht scannen kann.",
@@ -1168,6 +1169,7 @@ export const UI_CATALOG: Record<CoreLocale, Record<string, string>> = {
     "vte_failed": "Not saved — try again",
     "vte_copy": "Copy text",
     "vte_copied": "Copied",
+    "ss_read_failed": "The data for “{what}” could not be loaded — confirming is locked so nothing is saved from an empty list. Please reload the page.",
     "sp_taken": "Taken",
     "ppa_qr_title": "QR code",
     "ppa_qr_intro": "Scanning opens the link — for a poster, a projector or a flyer. The link is printed below it for anyone who cannot scan.",
@@ -1761,8 +1763,8 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
           "titel": "Interaction Title",
           "reihenfolge": "Order",
           "frage": "Question for Participants",
-          "vorprompt": "Pre-Prompt",
-          "endprompt": "Final Prompt",
+          "vorprompt": "Pre-prompt",
+          "endprompt": "End Prompt",
           "zusammengefuehrter_text": "Merged Text",
           "ki_antwort": "AI Response",
           "veranstaltung": "Event"
@@ -1774,7 +1776,7 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
         "app_id": "6aec87362b6e4e054710c681",
         "fields": {
           "interaktion": "Interaction",
-          "kuerzel": "Your Alias",
+          "kuerzel": "Your Code",
           "feedback_text": "Your Feedback",
           "absende_kennung": "Unique Submission ID"
         },
@@ -1785,9 +1787,9 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
         "app_id": "6aec87374113d2547ffb388c",
         "fields": {
           "veranstaltung": "Event",
-          "kuerzel": "Your Alias",
+          "kuerzel": "Your Code",
           "email": "Email Address",
-          "einwilligung": "I consent to my email address being stored and linked to my alias."
+          "einwilligung": "I consent to my email address being stored and associated with my code."
         },
         "lookups": {}
       }

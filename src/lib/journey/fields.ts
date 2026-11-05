@@ -8,7 +8,7 @@
  * applookup = record URL or id, numbers as number or numeric string) and
  * always return something renderable.
  */
-import type { JourneyRecord } from './port';
+import type { JourneyPort, JourneyRecord } from './port';
 import { formatDate, formatDateTime } from '@/lib/formatters';
 
 export interface LookupValue {
@@ -98,4 +98,17 @@ export function fieldRef(r: JourneyRecord, key: string): string | null {
   if (typeof v !== 'string' || !v) return null;
   const m = HEX_ID_RE.exec(v.trim());
   return m ? m[1] : null;
+}
+
+/**
+ * The record a pointer of ANOTHER record names RIGHT NOW — read fresh, never the
+ * value the page loaded minutes ago (EF-14, A11: a feedback went to an interaction
+ * that was no longer active, the grant cannot refuse it and the guard tool ran late).
+ *
+ *   const now = await freshRef(port, 'veranstaltungen', eventId, 'aktive_interaktion');
+ *   if (now !== shownInteractionId) { tell the visitor it changed, reload, do not send }
+ */
+export async function freshRef(port: JourneyPort, entity: Parameters<JourneyPort['get']>[0], id: string, field: string): Promise<string | null> {
+  const rec = await port.get(entity, id);
+  return rec ? fieldRef(rec, field) : null;
 }

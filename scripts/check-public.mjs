@@ -75,6 +75,7 @@ const planLinkParam = new Map(); // slug → {name, entity, label_field} the pla
 const planStatusField = new Map(); // entity → the plan's status field (G-5)
 const planSiblings = new Map(); // slug → other planned pages of the same visitor (one device key, A9)
 const planVisitor = new Map(); // slug → ["entity.field"] filled with the visitor's code
+const planPageSets = new Map(); // slug → ["entity.field"] the page sets from its linked record (must_equal)
 try {
   const planData = JSON.parse(readFileSync('.plan.json', 'utf8'));
   for (const pg of planData.public_pages || []) {
@@ -94,6 +95,7 @@ try {
     const vf = Array.isArray(pg.visitor_fields) ? pg.visitor_fields
       : (pg.creates || []).flatMap(c => Object.entries(c.fields || {}).filter(([, s]) => s === 'derived:visitor_key').map(([k]) => `${c.entity}.${k}`));
     if (vf.length) planVisitor.set(pg.slug, vf);
+    if (Array.isArray(pg.page_sets) && pg.page_sets.length) planPageSets.set(pg.slug, pg.page_sets);
   }
   const keyed = [...planVisitor.keys()];
   for (const s of keyed) planSiblings.set(s, keyed.filter(o => o !== s));
@@ -114,6 +116,13 @@ function checkVisitorKey(slug, src, file, sink) {
   if (own) {
     const line = src.slice(0, own.index).split('\n').length;
     sink.push(`${file}:${line}: page '${slug}' reads or writes localStorage itself — the visitor's code lives in useVisitorKey(), drafts in the journey layer; an own key gives the same visitor a second code`);
+  }
+}
+// EF-14: a reference the page sets from its linked record's pointer is read fresh at send time
+function checkFreshPointer(slug, src, file, sink) {
+  const sets = planPageSets.get(slug) || [];
+  if (sets.length && !/\bfreshRef\(/.test(src)) {
+    sink.push(`${file}: page '${slug}' sends ${sets.join(', ')}, which must be what the linked record points at WHEN the visitor sends — read it with freshRef(port, …) right before the create and refuse to send when it changed; a value loaded earlier goes to a question that is no longer open`);
   }
 }
 function checkSiblingLinks(slug, src, file, sink) {
@@ -762,6 +771,7 @@ if (pageOnly) {
     for (const ep of frag.endpoints) checkEndpoint(slug, ep, stagedSrc, fileArg, f);
     checkSiblingLinks(slug, stagedSrc, fileArg, errors);
     checkVisitorKey(slug, stagedSrc, fileArg, errors);
+    checkFreshPointer(slug, stagedSrc, fileArg, errors);
   }
   // the lane sees its warnings too — before, file mode printed errors only (Abnahme 8)
   for (const w of warnings) console.log(`WARN: ${w}`);
@@ -867,6 +877,7 @@ for (const [slug, page] of surfacePages) {
   // a warning in the tree run: a page built before the rule must not block an update
   if (src) checkSiblingLinks(slug, src, `${PAGES_DIR}/${page.component}.tsx`, warnings);
   if (src) checkVisitorKey(slug, src, `${PAGES_DIR}/${page.component}.tsx`, warnings);
+  if (src) checkFreshPointer(slug, src, `${PAGES_DIR}/${page.component}.tsx`, warnings);
   // PV-3: the plan ordered a link parameter — the surface must declare it, same entity
   const planned = planLinkParam.get(slug);
   if (planned && (!page.link_param || page.link_param.entity !== planned.entity)) {

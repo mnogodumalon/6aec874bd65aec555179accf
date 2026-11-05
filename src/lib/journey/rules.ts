@@ -364,10 +364,10 @@ export const DISPLAY_FIELDS: Record<EntityKey, string[]> = {
     "titel"
   ],
   "feedbacks": [
-    "feedback_text"
+    "kuerzel"
   ],
   "teilnehmerkontakte": [
-    "email"
+    "kuerzel"
   ]
 };
 

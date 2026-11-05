@@ -11,9 +11,30 @@
  *
  *   const live = useLiveList(port, 'beitraege', { intervalMs: 10000, list: { filter: "r.v_freigabe == 'ja'" } });
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import type { EntityKey } from './rules';
 import type { JourneyPort, JourneyRecord, ListOptions } from './port';
+
+// Lists of this page that never loaded and failed (EF-13, A11: an invalid orderby answered 400,
+// the merge step showed „Feedbacks 0“ and „Bestätigen“ would have written the empty frame).
+// SummaryStep reads it and refuses to confirm while one is failing — a 0 is not a value.
+const failing = new Map<string, string>();
+const failingListeners = new Set<() => void>();
+let failingSnapshot: string[] = [];
+function setFailing(id: string, entity: string | null): void {
+  if ((failing.get(id) ?? null) === entity) return;
+  if (entity) failing.set(id, entity); else failing.delete(id);
+  failingSnapshot = [...failing.values()];
+  for (const l of failingListeners) l();
+}
+/** The entities whose live list on this page failed before it ever loaded. */
+export function useFailingLists(): string[] {
+  return useSyncExternalStore(
+    (l) => { failingListeners.add(l); return () => { failingListeners.delete(l); }; },
+    () => failingSnapshot,
+    () => failingSnapshot,
+  );
+}
 
 export interface LiveListOptions {
   /** Poll every … ms (default 15 000; 0 = first load + events only). */
@@ -102,5 +123,10 @@ export function useLiveList(port: JourneyPort | null | undefined, entity: Entity
     return () => window.clearTimeout(t);
   }, [failures, loaded, enabled, fetchOnce]);
 
+  const listId = useId();
+  useEffect(() => {
+    setFailing(listId, error && !loaded ? String(entity) : null);
+  }, [listId, error, loaded, entity]);
+  useEffect(() => () => setFailing(listId, null), [listId]);
   return { records, loading, error, loaded, stale, lastSync, reload: fetchOnce };
 }

@@ -7,6 +7,7 @@ import { planProvidedKeys } from '@/lib/journey/port';
 import { EMPTY_VALUE } from '@/lib/journey/format';
 import { withRecordNames } from '@/lib/journey/recordLabels';
 import { mergeSummaryRows } from '@/lib/journey/summary';
+import { useFailingLists } from '@/lib/journey/useLiveList';
 import { entityLabel, isUnfilled } from '@/lib/journey/rules';
 import type { StepForm, SummaryItem } from '@/lib/journey/useStepForm';
 import { stepVerb, type JourneySubmit, type PlanStep } from '@/lib/journey/useJourneySubmit';
@@ -130,6 +131,8 @@ export function SummaryStep({
   // is nobody's input here: "Buchung anlegen" set status via plan values,
   // "Einchecken" updates a record whose room is already there — both blocked
   // the confirm with a link to nowhere (live-seen).
+  // EF-13: a list this page reads failed before it ever loaded — what it shows is no value
+  const failingLists = useFailingLists();
   const missing = forms.flatMap(f => {
     const provided = planProvidedKeys(submit.plan.find(s => s.form === f));
     return f.keys
@@ -308,6 +311,11 @@ export function SummaryStep({
         </div>
       )}
 
+      {failingLists.length > 0 && (
+        <div role="alert" data-journey-read-failed="" className="rounded-xl border border-destructive/40 bg-destructive/5 p-3 text-sm">
+          {t('ss_read_failed', { what: [...new Set(failingLists)].map(e => entityLabel(e as never)).join(', ') })}
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 border-t border-border pt-4">
         {whatHappensNext && <p className="text-sm text-muted-foreground flex-1">{whatHappensNext}</p>}
         {variants && variants.length > 0 ? (
@@ -318,7 +326,7 @@ export function SummaryStep({
                 type="button"
                 variant={i === 0 ? 'default' : 'outline'}
                 onClick={() => { submit.remember(rows); void v.confirm(); }}
-                disabled={submit.submitting || missing.length > 0}
+                disabled={submit.submitting || missing.length > 0 || failingLists.length > 0}
                 className="gap-2"
                 data-journey-variant={v.id}
                 {...(i === 0 ? { 'data-journey-confirm': '' } : {})}
@@ -332,7 +340,7 @@ export function SummaryStep({
         <Button
           type="button"
           onClick={() => { submit.remember(rows); void submit.run(); }}
-          disabled={submit.submitting || missing.length > 0}
+          disabled={submit.submitting || missing.length > 0 || failingLists.length > 0}
           className="gap-2 sm:ml-auto"
           data-journey-confirm=""
         >

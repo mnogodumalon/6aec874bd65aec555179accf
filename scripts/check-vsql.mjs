@@ -152,7 +152,38 @@ for (const call of src.matchAll(/useLiveRecords\(\s*['"](\w+)['"]\s*,\s*\{/g)) {
   probes.push({ entity: call[1], filter: f[2], dynamic: f[2].includes('${'), where: null, line: lineOf(call.index) });
 }
 
+// A flow's live list (useLiveList(port, 'e', { list: { filter, orderby } })) reads vSQL too.
+for (const call of src.matchAll(/useLiveList\(\s*[\w.]+\s*,\s*['"](\w+)['"]\s*,\s*\{/g)) {
+  const open = call.index + call[0].length - 1;
+  const end = balancedEnd(src, open);
+  if (end < 0) continue;
+  const opts = src.slice(open, end + 1);
+  const f = /\bfilter\s*:\s*(['"`])([\s\S]*?)\1/.exec(opts);
+  if (!f) continue;
+  probes.push({ entity: call[1], filter: f[2], dynamic: f[2].includes('${'), where: null, line: lineOf(call.index) });
+}
+
+// EF-13 (A11, Bau 14): `orderby: ['r.createdAt asc']` answered 400 on every load, the merge step
+// read 0 feedbacks and „Bestätigen“ would have written the empty frame. An orderby item is
+// `r.<attribute>` (id, createdat, updatedat, createdby, updatedby — lower case) or `r.v_<field>`,
+// optionally `asc`/`desc` — checked without a key, wherever it stands.
+const ORDER_OK = /^r\.(?:id|createdat|updatedat|createdby|updatedby|v_[a-z0-9_]+)(?:\s+(?:asc|desc))?$/;
+for (const m of src.matchAll(/\borderby\s*:\s*\[([^\]]*)\]/g)) {
+  for (const item of m[1].matchAll(/(['"`])([^'"`]*)\1/g)) {
+    const expr = item[2].trim();
+    if (expr.includes('${') || ORDER_OK.test(expr)) continue;
+    const attr = /^r\.(createdAt|updatedAt|createdBy|updatedBy|record_id)\b/.exec(expr);
+    const hint = attr ? (attr[1] === 'record_id' ? 'the record id is r.id' : `vSQL attributes are lower case: r.${attr[1].toLowerCase()}`)
+      : /^r\.(?!v_)\w/.test(expr) ? `a field is r.v_${expr.slice(2).split(/\s/)[0]}` : 'write r.<attribute> or r.v_<field>, then asc or desc';
+    errors.push(`${rel}:${lineOf(m.index)}: orderby \`${expr}\` is not vSQL — ${hint}. The server answers 400 and the list stays empty. Example: 'r.createdat asc'`);
+  }
+}
 if (probes.length === 0) {
+  if (errors.length) {
+    for (const e of errors) console.error(`ERROR: ${e}`);
+    console.error(`check-vsql: ${errors.length} error(s) in ${rel}`);
+    process.exit(1);
+  }
   console.log(`check-vsql: OK (${rel} — no filters to probe)`);
   process.exit(0);
 }
