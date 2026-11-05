@@ -124,6 +124,10 @@ function checkFreshPointer(slug, src, file, sink) {
   if (sets.length && !/\bfreshRef\(/.test(src)) {
     sink.push(`${file}: page '${slug}' sends ${sets.join(', ')}, which must be what the linked record points at WHEN the visitor sends — read it with freshRef(port, …) right before the create and refuse to send when it changed; a value loaded earlier goes to a question that is no longer open`);
   }
+  // EF-16: the fresh read is an ADDITIONAL check — the shown pointer stays live (useLiveList)
+  if (sets.length && !/\buseLiveList\(/.test(src)) {
+    sink.push(`${file}: page '${slug}' shows what the linked record points at, but polls nothing — keep useLiveList(port, …) on that record so an open form follows the switch within one poll; freshRef only checks again when sending`);
+  }
 }
 function checkSiblingLinks(slug, src, file, sink) {
   const missing = (planSiblings.get(slug) || []).filter(s => !src.includes(`/public/${s}`));
