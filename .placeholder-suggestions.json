@@ -1,0 +1,30 @@
+{
+  "VeranstaltungenDialog.tsx": {
+    "aktive_interaktion": "Welche Interaktion läuft?",
+    "titel": "z. B. Workshop Zukunftsdialog",
+    "datum": "Wann findet sie statt?",
+    "beschreibung": "Worum geht es?",
+    "feedback_link": "z. B. https://feedback.example.de"
+  },
+  "InteraktionenDialog.tsx": {
+    "titel": "z. B. Einstiegsfrage Zukunftsbild",
+    "reihenfolge": "z. B. 1",
+    "frage": "Welche Frage wird gestellt?",
+    "vorprompt": "Anweisung vor den Antworten",
+    "endprompt": "Anweisung nach den Antworten",
+    "zusammengefuehrter_text": "Gesammelte Antworten als Text",
+    "ki_antwort": "Ergebnis der KI-Auswertung",
+    "veranstaltung": "Welche Veranstaltung?"
+  },
+  "FeedbacksDialog.tsx": {
+    "interaktion": "Welche Interaktion?",
+    "kuerzel": "z. B. AB12",
+    "feedback_text": "Was ist dir aufgefallen?",
+    "absende_kennung": "z. B. FB-2026-001"
+  },
+  "TeilnehmerkontakteDialog.tsx": {
+    "veranstaltung": "Welche Veranstaltung?",
+    "kuerzel": "z. B. AB-42",
+    "email": "z. B. name@beispiel.de"
+  }
+}
