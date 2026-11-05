@@ -10,7 +10,7 @@ import {
   type PublicPagesConfig, type PublicPageConfig,
 } from '@/lib/publicClient';
 import {
-  useStepForm, useJourneySubmit, useLiveList, useVisitorKey, fieldText, fieldRef,
+  useStepForm, useJourneySubmit, useLiveList, useVisitorKey, fieldText, fieldRef, freshRef,
 } from '@/lib/journey';
 import { createPublicPort } from '@/lib/journey/publicPort';
 import { tx } from '@/i18n';
@@ -45,7 +45,13 @@ export default function FeedbackGeben() {
 
   const veranstaltung = events.records.find(r => r.id === veranstaltungId) ?? null;
   const activeId = veranstaltung ? fieldRef(veranstaltung, 'aktive_interaktion') : null;
-  const aktiv = activeId ? interaktionen.records.find(r => r.id === activeId) ?? null : null;
+  // The question the visitor was shown: pinned at load, moved only by the fresh check on submit.
+  const [shownId, setShownId] = useState<string | null>(null);
+  const [changed, setChanged] = useState(false);
+  useEffect(() => {
+    if (!shownId && activeId) setShownId(activeId);
+  }, [shownId, activeId]);
+  const aktiv = shownId ? interaktionen.records.find(r => r.id === shownId) ?? null : null;
 
   const form = useStepForm('feedbacks', {
     fields: ['feedback_text'],
@@ -59,7 +65,7 @@ export default function FeedbackGeben() {
       entity: 'feedbacks',
       form,
       primary: true,
-      values: { interaktion: activeId ?? '', kuerzel: kuerzel, absende_kennung: kennung },
+      values: { interaktion: shownId ?? '', kuerzel: kuerzel, absende_kennung: kennung },
     }],
     { draftKey: `feedback-${veranstaltungId ?? 'none'}` },
   );
@@ -104,11 +110,21 @@ export default function FeedbackGeben() {
     submit.reset();
     form.reset();
     setKennung(newKennung());
+    setShownId(null);
+    setChanged(false);
   };
 
   const send = async () => {
     prepareChallenge(cfg, page, 'POST', `/apps/${page.endpoints?.find(e => e.op === 'create')?.app_id ?? ''}/records`);
     if (!form.validate()) return;
+    const fresh = await freshRef(port, 'veranstaltungen', veranstaltungId, 'aktive_interaktion');
+    if (fresh !== shownId) {
+      await interaktionen.reload();
+      setShownId(fresh);
+      setChanged(true);
+      return;
+    }
+    setChanged(false);
     await submit.run();
   };
 
@@ -144,7 +160,15 @@ export default function FeedbackGeben() {
             <p className="text-sm font-medium">{fieldText(aktiv, 'titel')}</p>
             <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{fieldText(aktiv, 'frage')}</p>
           </div>
+          {changed && (
+            <p className="text-sm font-medium">{tx('Inzwischen ist eine andere Frage dran')}</p>
+          )}
           <Bound form={form} name="feedback_text" rows={5} />
+          <p className="text-sm text-muted-foreground">
+            {tx('Dein Kürzel')}: <span className="font-mono font-semibold tracking-widest">{kuerzel}</span>
+          </p>
+          <input type="hidden" name="kuerzel" value={kuerzel} readOnly />
+          <input type="hidden" name="absende_kennung" value={kennung} readOnly />
           <FieldErrorSummary forms={[form]} />
           {submit.error && (
             <p className="text-sm text-destructive">
