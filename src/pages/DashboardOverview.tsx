@@ -6,7 +6,8 @@ import { useEntityCrud } from '@/components/EntityCrud';
 import { flowActionFor, countOf } from '@/config/plan';
 import type { EnrichedVeranstaltungen, EnrichedInteraktionen } from '@/types/enriched';
 import { extractRecordId } from '@/services/livingAppsService';
-import { tx, appLabel, dateFnsLocale } from '@/i18n';
+import { tx, appLabel } from '@/i18n';
+import { formatDateTime } from '@/lib/formatters';
 import { useClock, gruss, namen } from '@/lib/polish';
 import { DashboardGrid } from '@/components/DashboardGrid';
 import { WorkList } from '@/components/WorkList';
@@ -185,7 +186,7 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
                       <button type="button" className="min-w-0 text-left" onClick={() => crud.veranstaltungen.openDetail(v)}>
                         <h2 className="truncate text-lg font-semibold">{v.fields.titel}</h2>
                         <p className="text-sm text-muted-foreground">
-                          {v.fields.datum ? format(new Date(v.fields.datum), 'PPp', { locale: dateFnsLocale() }) : tx('Ohne Datum')}
+                          {v.fields.datum ? formatDateTime(v.fields.datum) : tx('Ohne Datum')}
                           {' · '}
                           {act ? tx`Aktiv: ${act.fields.titel ?? ''}` : tx('Keine aktive Interaktion')}
                         </p>

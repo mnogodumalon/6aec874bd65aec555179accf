@@ -6,8 +6,9 @@
       "type": "custom",
       "entity": "feedbacks",
       "title": "Feedback geben",
-      "published": false,
+      "published": true,
       "fields": [
+        "interaktion",
         "kuerzel",
         "feedback_text",
         "absende_kennung"
