@@ -1763,7 +1763,7 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
           "titel": "Interaction Title",
           "reihenfolge": "Order",
           "frage": "Question for Participants",
-          "vorprompt": "Pre-Prompt",
+          "vorprompt": "Pre-prompt",
           "endprompt": "End Prompt",
           "zusammengefuehrter_text": "Merged Text",
           "ki_antwort": "AI Response",
@@ -1776,7 +1776,7 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
         "app_id": "6aec87362b6e4e054710c681",
         "fields": {
           "interaktion": "Interaction",
-          "kuerzel": "Your Alias",
+          "kuerzel": "Your Code",
           "feedback_text": "Your Feedback",
           "absende_kennung": "Unique Submission ID"
         },
@@ -1787,9 +1787,9 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
         "app_id": "6aec87374113d2547ffb388c",
         "fields": {
           "veranstaltung": "Event",
-          "kuerzel": "Your Alias",
+          "kuerzel": "Your Code",
           "email": "Email Address",
-          "einwilligung": "I consent to my email address being stored and linked to my alias."
+          "einwilligung": "I consent to my email address being stored and linked to my code."
         },
         "lookups": {}
       }

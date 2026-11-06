@@ -122,6 +122,11 @@ export interface JourneySubmit {
 export interface JourneySubmitOptions {
   /** Cleared once the whole plan succeeded. */
   draftKey?: string;
+  /** Runs before every send AND every automatic resend (EF-22): return a sentence to refuse
+   *  („Inzwischen ist eine andere Frage dran.“ — nothing is sent, the text stays), null to go on.
+   *  A network error in here is the OFFLINE way like one in the plan: saved, sent when back online.
+   *  Put `freshRef(…)` here, never before `run()` in the page. */
+  check?: (ctx: PlanContext) => Promise<string | null | undefined> | string | null | undefined;
   onSuccess?: (result: JourneyResult) => void;
 }
 
@@ -251,6 +256,12 @@ export function useJourneySubmit(
     const steps = planRef.current;
     const ctx: PlanContext = { port, done: doneRef.current };
     try {
+      const refusal = optionsRef.current.check ? await optionsRef.current.check(ctx) : null;
+      if (refusal) {
+        const err = new Error(refusal);
+        err.name = 'JourneyRefused';
+        throw err;
+      }
       for (const step of steps) {
         if (completedRef.current.has(step.key)) continue;
         for (const need of step.needs ?? []) {
@@ -278,8 +289,10 @@ export function useJourneySubmit(
       return out;
     } catch (e) {
       const err = e instanceof Error ? e : new Error(String(e));
-      // no network: the browser says so, or fetch rejected without an answer
-      setOffline((typeof navigator !== 'undefined' && navigator.onLine === false) || (err.name === 'TypeError' && /fetch|network|load failed/i.test(err.message)));
+      // no network: the browser says so, or fetch rejected without an answer — raw (TypeError) or
+      // wrapped by the public client (SubmitFailedError „Failed to fetch“, EF-22); a refusal is no outage
+      setOffline(err.name !== 'JourneyRefused' && ((typeof navigator !== 'undefined' && navigator.onLine === false)
+        || /failed to fetch|networkerror|network error|load failed/i.test(err.message)));
       const failing = steps.find(s => !completedRef.current.has(s.key));
       if (failing) setStepStatus(failing.key, 'failed');
       setFailedStep(failing?.key ?? null);
