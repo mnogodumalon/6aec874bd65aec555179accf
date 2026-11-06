@@ -60,7 +60,7 @@ export default function FeedbackGeben() {
       entity: 'feedbacks',
       form,
       primary: true,
-      values: { interaktion: activeId ?? '', kuerzel: kuerzel, absende_kennung: kennung },
+      values: { kuerzel: kuerzel, absende_kennung: kennung },
     }],
     {
       draftKey: `feedback-${veranstaltungId ?? 'none'}`,
@@ -134,7 +134,7 @@ export default function FeedbackGeben() {
         <div className="space-y-5 text-center">
           <h2 className="text-xl font-semibold">{tx('Danke für dein Feedback!')}</h2>
           <div className="rounded-xl bg-muted px-4 py-5">
-            <p className="text-sm text-muted-foreground">{tx('Dein Kürzel für heute Abend')}</p>
+            <p className="text-sm text-muted-foreground">{tx('Dein Kürzel für diese Veranstaltung')}</p>
             <p className="mt-1 font-mono text-3xl font-bold tracking-widest">{kuerzel}</p>
           </div>
           <div className="flex flex-col items-center gap-3">
