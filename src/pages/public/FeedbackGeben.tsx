@@ -60,7 +60,7 @@ export default function FeedbackGeben() {
       entity: 'feedbacks',
       form,
       primary: true,
-      values: { kuerzel: kuerzel, absende_kennung: kennung },
+      values: { interaktion: activeId, kuerzel: kuerzel, absende_kennung: kennung },
     }],
     {
       draftKey: `feedback-${veranstaltungId ?? 'none'}`,

@@ -34,6 +34,7 @@
           "entity": "feedbacks",
           "op": "create",
           "fields": [
+            "interaktion",
             "feedback_text",
             "kuerzel",
             "absende_kennung"
