@@ -40,8 +40,8 @@ export default function FeedbackGeben() {
   }, []);
 
   const port = useMemo(() => (cfg && page ? createPublicPort(cfg, page) : null), [cfg, page]);
-  const events = useLiveList(port, 'veranstaltungen', { intervalMs: 3000 });
-  const interaktionen = useLiveList(port, 'interaktionen', { intervalMs: 3000 });
+  const events = useLiveList(port, 'veranstaltungen', { intervalMs: 20_000 });
+  const interaktionen = useLiveList(port, 'interaktionen', { intervalMs: 20_000 });
 
   const veranstaltung = events.records.find(r => r.id === veranstaltungId) ?? null;
   const activeId = veranstaltung ? fieldRef(veranstaltung, 'aktive_interaktion') : null;
@@ -62,7 +62,21 @@ export default function FeedbackGeben() {
       primary: true,
       values: { interaktion: activeId ?? '', kuerzel: kuerzel, absende_kennung: kennung },
     }],
-    { draftKey: `feedback-${veranstaltungId ?? 'none'}` },
+    {
+      draftKey: `feedback-${veranstaltungId ?? 'none'}`,
+      check: async () => {
+        const fresh = await freshRef(
+          port ?? ({} as NonNullable<typeof port>), 'veranstaltungen', veranstaltungId ?? '', 'aktive_interaktion',
+        );
+        if (fresh === activeId) {
+          setChanged(false);
+          return null;
+        }
+        await Promise.all([events.reload(), interaktionen.reload()]);
+        setChanged(true);
+        return tx('Inzwischen ist eine andere Frage dran.');
+      },
+    },
   );
 
   if (loading || !cfg || !page || !port) {
@@ -111,13 +125,6 @@ export default function FeedbackGeben() {
   const send = async () => {
     prepareChallenge(cfg, page, 'POST', `/apps/${page.endpoints?.find(e => e.op === 'create')?.app_id ?? ''}/records`);
     if (!form.validate()) return;
-    const fresh = await freshRef(port, 'veranstaltungen', veranstaltungId, 'aktive_interaktion');
-    if (fresh !== activeId) {
-      await Promise.all([events.reload(), interaktionen.reload()]);
-      setChanged(true);
-      return;
-    }
-    setChanged(false);
     await submit.run();
   };
 
@@ -154,7 +161,7 @@ export default function FeedbackGeben() {
             <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{fieldText(aktiv, 'frage')}</p>
           </div>
           {changed && (
-            <p className="text-sm font-medium">{tx('Inzwischen ist eine andere Frage dran')}</p>
+            <p className="text-sm font-medium">{tx('Inzwischen ist eine andere Frage dran.')}</p>
           )}
           <Bound form={form} name="feedback_text" rows={5} />
           <p className="text-sm text-muted-foreground">
@@ -163,7 +170,7 @@ export default function FeedbackGeben() {
           <input type="hidden" name="kuerzel" value={kuerzel} readOnly />
           <input type="hidden" name="absende_kennung" value={kennung} readOnly />
           <FieldErrorSummary forms={[form]} />
-          {submit.error && (
+          {submit.error && !changed && (
             <p className="text-sm text-destructive">
               {submit.offline
                 ? tx('Keine Verbindung — deine Eingaben sind gesichert.')

@@ -66,12 +66,12 @@ createRecordUrl from the service. Note the lowercase `l` in the service path.
   ✚ EnrichedInteraktionen adds ONLY veranstaltungName — via enrichInteraktionen(interaktionen, { veranstaltungenMap }), all maps required
   → veranstaltung links to app_id 6aec8731f4eae4f5e0cc5870
 - Feedbacks (feedbacks): interaktion!^[applookup/select], kuerzel!^[string/text] "Dein Kürzel", feedback_text!^[string/textarea] "Dein Feedback", absende_kennung!^[string/text] "Eindeutige Absende-Kennung"
+  ≡ 8 records at build time
   ◈ interaktion → record (interaktionen, EntitySelectStep)
   ⚙ getFeedbacks() · getFeedback(id) · createFeedback(fields) · updateFeedback(id, fields) · deleteFeedback(id) · queryFeedbacks({ filter, orderby, limit, offset, fields }) · countFeedbacks(filter?)
   ✚ EnrichedFeedbacks adds ONLY interaktionName — via enrichFeedbacks(feedbacks, { interaktionenMap }), all maps required
   → interaktion links to app_id 6aec87361a9f3fd45cdd9602
 - Teilnehmerkontakte (teilnehmerkontakte): veranstaltung!^[applookup/select], kuerzel!^[string/text] "Dein Kürzel", email!^[string/email] "E-Mail-Adresse", einwilligung!^[bool] "Ich willige ein, dass meine E-Mail-Adresse gespeichert und zu meinem Kürzel zugeordnet wird."
-  ≡ 4 records at build time
   ◈ veranstaltung → record (veranstaltungen, EntitySelectStep)
   ⚙ getTeilnehmerkontakte() · getTeilnehmerkontakteEntry(id) · createTeilnehmerkontakteEntry(fields) · updateTeilnehmerkontakteEntry(id, fields) · deleteTeilnehmerkontakteEntry(id) · queryTeilnehmerkontakte({ filter, orderby, limit, offset, fields }) · countTeilnehmerkontakte(filter?)
   ✚ EnrichedTeilnehmerkontakte adds ONLY veranstaltungName — via enrichTeilnehmerkontakte(teilnehmerkontakte, { veranstaltungenMap }), all maps required
