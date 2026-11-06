@@ -1763,8 +1763,8 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
           "titel": "Interaction Title",
           "reihenfolge": "Order",
           "frage": "Question for Participants",
-          "vorprompt": "Pre-prompt",
-          "endprompt": "End Prompt",
+          "vorprompt": "Pre-Prompt",
+          "endprompt": "Final Prompt",
           "zusammengefuehrter_text": "Merged Text",
           "ki_antwort": "AI Response",
           "veranstaltung": "Event"
@@ -1772,7 +1772,7 @@ export const LABELS: Record<CoreLocale, LabelBundle> = {
         "lookups": {}
       },
       "feedbacks": {
-        "name": "Feedbacks",
+        "name": "Feedback",
         "app_id": "6aec87362b6e4e054710c681",
         "fields": {
           "interaktion": "Interaction",

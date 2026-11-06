@@ -254,6 +254,8 @@ export function formatDate(s: string | undefined) {
 
 export function formatDateTime(s: string | undefined) {
   if (!s) return '—';
+  // a day without a time (stored date-only, or midnight) reads as the day — „6. Nov. 2026“, never „… 00:00“
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s) || /T00:00(:00)?(\.0+)?Z?$/.test(s)) return formatDate(s.slice(0, 10));
   try { return format(parseISO(s), dateTimeFormat(), { locale: dateFnsLocale() }); } catch { return s; }
 }
 

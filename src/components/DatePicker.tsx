@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { format, isValid, parse } from 'date-fns';
+import { format, isValid, parse, parseISO } from 'date-fns';
 import { IconCalendar, IconClock, IconX } from '@tabler/icons-react';
 import { dateFnsLocale, t } from '@/i18n';
 
@@ -29,7 +29,11 @@ const DATETIME_FMT = "yyyy-MM-dd'T'HH:mm";
 function parseValue(raw: string | null | undefined, mode: Mode): Date | null {
   if (!raw) return null;
   const parsed = parse(raw, mode === 'datetime' ? DATETIME_FMT : DATE_FMT, new Date());
-  return isValid(parsed) ? parsed : null;
+  if (isValid(parsed)) return parsed;
+  // what the platform stores is not always the input's form: a day without a time in a
+  // date-time field, or seconds („2026-11-06T18:30:00“) — the edit dialog showed it EMPTY (Bau 14)
+  const iso = parseISO(raw);
+  return isValid(iso) ? iso : null;
 }
 
 function formatValue(date: Date, mode: Mode): string {
@@ -100,7 +104,7 @@ export function DatePicker({
           id={id}
           type={mode === 'datetime' ? 'datetime-local' : 'date'}
           step={mode === 'datetime' ? 60 : undefined}
-          value={value ?? ''}
+          value={date ? formatValue(date, mode) : (value ?? '')}
           min={min}
           max={max}
           required={required}
