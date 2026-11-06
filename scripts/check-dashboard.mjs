@@ -691,7 +691,7 @@ if (gridIdx >= 0) {
 // published page by its link_param. An error when the plan has such a page,
 // a warning otherwise (a QR of some other link may be meant).
 {
-  const LINK_ENTITIES = [];
+  const LINK_ENTITIES = ["veranstaltungen"];
   const walkQr = (dir) => {
     let out = [];
     if (!existsSync(dir)) return out;

@@ -23,6 +23,10 @@ export const PLAN_SENTENCES: Record<string, string[]> = {
   "feedbacks-zusammenfuehren": [
     "Ändert: interaktionen",
     "Automatisch: zusammengefuehrter_text (Vorprompt, dann jedes Feedback der Interaktion als Kürzel mit Feedback-Text, je eines p …)"
+  ],
+  "feedback-geben": [
+    "Legt an: feedbacks",
+    "Automatisch: interaktion (übernommen aus veranstaltungen.aktive_interaktion)"
   ]
 };
 
@@ -69,6 +73,9 @@ export const FLOW_ENTITIES: Record<string, string[]> = {
   ],
   "feedbacks-zusammenfuehren": [
     "interaktionen"
+  ],
+  "feedback-geben": [
+    "feedbacks"
   ]
 };
 

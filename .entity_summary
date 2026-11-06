@@ -60,7 +60,6 @@ createRecordUrl from the service. Note the lowercase `l` in the service path.
   ✚ EnrichedVeranstaltungen adds ONLY aktive_interaktionName — via enrichVeranstaltungen(veranstaltungen, { interaktionenMap }), all maps required
   → aktive_interaktion links to app_id 6aec87361a9f3fd45cdd9602
 - Interaktionen (interaktionen): titel!^[string/text] "Titel der Interaktion", reihenfolge^[number], frage!^[string/textarea] "Frage an die Teilnehmenden", vorprompt^[string/textarea], endprompt[string/textarea], zusammengefuehrter_text[string/textarea], ki_antwort[string/textarea] "Antwort der KI", veranstaltung!^[applookup/select]
-  ≡ 5 records at build time
   ◈ veranstaltung → record (veranstaltungen, EntitySelectStep)
   ⚙ getInteraktionen() · getInteraktionenEntry(id) · createInteraktionenEntry(fields) · updateInteraktionenEntry(id, fields) · deleteInteraktionenEntry(id) · queryInteraktionen({ filter, orderby, limit, offset, fields }) · countInteraktionen(filter?)
   ✚ EnrichedInteraktionen adds ONLY veranstaltungName — via enrichInteraktionen(interaktionen, { veranstaltungenMap }), all maps required
