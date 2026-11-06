@@ -153,7 +153,12 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
               <WorkList
                 title={tx('Neueste Feedbacks')}
                 icon={<IconMessage size={16} />}
-                items={[...crud.enriched.feedbacks].reverse().slice(0, 5).map(f => ({
+                items={[...crud.enriched.feedbacks].sort((a, b) => {
+                  const ta = Date.parse(a.createdat ?? a.created_at ?? '') || 0;
+                  const tb = Date.parse(b.createdat ?? b.created_at ?? '') || 0;
+                  if (tb !== ta) return tb - ta;
+                  return a.record_id < b.record_id ? 1 : a.record_id > b.record_id ? -1 : 0;
+                }).slice(0, 5).map(f => ({
                   id: f.record_id,
                   title: f.fields.kuerzel ?? '',
                   secondLine: <span className="text-muted-foreground">{f.interaktionName} · {(f.fields.feedback_text ?? '').slice(0, 60)}</span>,
